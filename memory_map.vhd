@@ -33,95 +33,127 @@ end memory_map;
 
 architecture BHV of memory_map is
 	signal reg : std_logic_vector(MMAP_DATA_RANGE); --Register for Latency
+	signal go_reg : std_logic;                      --Register for Latency
+	signal n_reg  : std_logic_vector(MMAP_DATA_RANGE); --Register for Latency
 	
 begin
 	
-    -- --Write Operation
-	-- process(clk, rst)
-	-- begin
-		-- if(rst = '1') then
-			-- go <= '0';
-			-- n  <= std_logic_vector(to_unsigned(0,32));		
-		-- elsif(rising_edge(clk)) then
-			-- if(wr_en = '1') then --If this is a write
-				-- if(wr_addr = C_GO_ADDR) then    -- Check if this is a write to go
-					-- go <= wr_data(0);           -- Clear or set go
-				-- elsif(wr_addr =  C_N_ADDR) then -- Check if this is a write to n
-					-- n <= wr_data;               -- Write to n                  
-				-- end if;
-			-- end if;
-		-- end if;
-	-- end process;
-	
-	 --Write Operation
-	process(wr_en, wr_addr, wr_data)
+    --Write Operation
+	process(clk, rst)
 	begin
-		if(wr_en = '1') then --If this is a write
-			if(wr_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    -- Check if this is a write to go
-				go <= wr_data(0);           -- Clear or set go
-				n  <= std_logic_vector(to_unsigned(0,32));
-			elsif(wr_addr = std_logic_vector(to_unsigned (C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a write to n
-				n <= wr_data;               -- Write to n     
-				go <= '0';
-			else
-				go <= '0';
-			    n  <= std_logic_vector(to_unsigned(0,32)); 
+		if(rst = '1') then
+			go <= '0';
+			n  <= std_logic_vector(to_unsigned(0,32));		
+		elsif(rising_edge(clk)) then
+			if(wr_en = '1') then --If this is a write
+				if(wr_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) )) then    -- Check if this is a write to go
+					go_reg <= wr_data(0);           -- Clear or set go
+				elsif(wr_addr =  std_logic_vector(to_unsigned(C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a write to n
+					n_reg <= wr_data;               -- Write to n                  
+				end if;
 			end if;
-		else
-		
 		end if;
 	end process;
+	
+	 -- --Write Operation
+	-- process(wr_en, wr_addr, wr_data)
+	-- begin
+		-- if(wr_en = '1') then --If this is a write
+			-- if(wr_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    -- Check if this is a write to go
+				-- go_reg <= wr_data(0);           -- Clear or set go
+				-- n_reg  <= std_logic_vector(to_unsigned(0,32));
+			-- elsif(wr_addr = std_logic_vector(to_unsigned (C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a write to n
+				-- n_reg <= wr_data;               -- Write to n     
+				-- go_reg <= '0';
+			-- else
+				-- go_reg <= '0';
+			    -- n_reg  <= std_logic_vector(to_unsigned(0,32)); 
+			-- end if;
+		-- else
+		
+		-- end if;
+	-- end process;
 	
 	
 	
 	
 	--Read Operation
-	process(rd_en, rd_addr)
-	begin
-		if(rd_en = '1') then
+	-- process(rd_en, rd_addr)
+	-- begin
+		-- if(rd_en = '1') then
 				
-					if(rd_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    -- Check if this is a read from go
-						--Store in register
-						if(rst = '1') then
-							reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-						elsif(rising_edge(clk)) then
-							reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-							reg(0) <= go; --Delay a cycle (go is only 1 bit)
-						end if;
+					-- if(rd_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    -- Check if this is a read from go
+						-- --Store in register
+						-- if(rst = '1') then
+							-- reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+						-- elsif(rising_edge(clk)) then
+							-- reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+							-- reg(0) <= go_reg; --Delay a cycle (go is only 1 bit)
+						-- end if;
 						
 							
-					elsif(rd_addr = std_logic_vector(to_unsigned(C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a read from n
-						--Store in register
-						if(rst = '1') then
-							reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-						elsif(rising_edge(clk)) then
-							reg <= n; --Delay a cycle
-						end if;
+					-- elsif(rd_addr = std_logic_vector(to_unsigned(C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a read from n
+						-- --Store in register
+						-- if(rst = '1') then
+							-- reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+						-- elsif(rising_edge(clk)) then
+							-- reg <= n_reg; --Delay a cycle
+						-- end if;
 						
-					elsif(rd_addr = std_logic_vector(to_unsigned(C_RESULT_ADDR, C_MMAP_ADDR_WIDTH) ) ) then --  Check if this is a read from result
-						--Store in register
-						if(rst = '1') then
-							reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-						elsif(rising_edge(clk)) then
-							reg <= result; --Delay a cycle
-						end if;
+					-- elsif(rd_addr = std_logic_vector(to_unsigned(C_RESULT_ADDR, C_MMAP_ADDR_WIDTH) ) ) then --  Check if this is a read from result
+						-- --Store in register
+						-- if(rst = '1') then
+							-- reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+						-- elsif(rising_edge(clk)) then
+							-- reg <= result; --Delay a cycle
+						-- end if;
 						
-					elsif(rd_addr = std_logic_vector(to_unsigned(C_DONE_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    --  Check if this is a read from done
-						--Store in register
-						if(rst = '1') then
-							reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-						elsif(rising_edge(clk)) then
-							reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-							reg(0) <= done; --Delay a cycle  (done is only 1 bit)
-						end if;
+					-- elsif(rd_addr = std_logic_vector(to_unsigned(C_DONE_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    --  Check if this is a read from done
+						-- --Store in register
+						-- if(rst = '1') then
+							-- reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+						-- elsif(rising_edge(clk)) then
+							-- reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+							-- reg(0) <= done; --Delay a cycle  (done is only 1 bit)
+						-- end if;
 				
-					end if;
+					-- end if;
 					
-					rd_data <= reg; --Write to read data after a cycle
+					-- rd_data <= reg; --Write to read data after a cycle
 				
-	    else
-			rd_data <= std_logic_vector(to_unsigned(0,C_MMAP_DATA_WIDTH));
+	    -- else
+			-- rd_data <= std_logic_vector(to_unsigned(0,C_MMAP_DATA_WIDTH));
+		-- end if;
+	-- end process;
+	
+	process(clk, rst)
+	begin
+		if(rst = '1') then
+			reg <= std_logic_vector(to_unsigned(0,C_MMAP_DATA_WIDTH)); 
+		elsif(rising_edge(clk)) then
+			if(rd_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    -- Check if this is a read from go
+				--Store in register
+				reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+				reg(0) <= go_reg; --Delay a cycle (go is only 1 bit)
+									
+			elsif(rd_addr = std_logic_vector(to_unsigned(C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a read from n
+				reg <= n_reg; --Delay a cycle
+						
+			elsif(rd_addr = std_logic_vector(to_unsigned(C_RESULT_ADDR, C_MMAP_ADDR_WIDTH) ) ) then --  Check if this is a read from result
+				reg <= result; --Delay a cycle
+	
+			elsif(rd_addr = std_logic_vector(to_unsigned(C_DONE_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    --  Check if this is a read from done
+				reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
+				reg(0) <= done; --Delay a cycle  (done is only 1 bit)
+				
+			end if;
+					
 		end if;
 	end process;
+	
+	rd_data <= reg;
+	
 
+	go <= go_reg; --Assign outputs to registers so I can read from them
+	n  <= n_reg;
 end BHV;
