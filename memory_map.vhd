@@ -64,23 +64,22 @@ begin
 		if(rst = '1') then
 			reg <= std_logic_vector(to_unsigned(0,C_MMAP_DATA_WIDTH)); 
 		elsif(rising_edge(clk)) then
-			if(rd_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    -- Check if this is a read from go
-				--Store in register
-				reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-				reg(0) <= go_reg; --Delay a cycle (go is only 1 bit)
+			if(rd_en = '1') then
+				if(rd_addr = std_logic_vector(to_unsigned(C_GO_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    -- Check if this is a read from go
+					--Store in register
+					reg(0) <= go_reg; --Delay a cycle (go is only 1 bit)
 									
-			elsif(rd_addr = std_logic_vector(to_unsigned(C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a read from n
-				reg <= n_reg; --Delay a cycle
+				elsif(rd_addr = std_logic_vector(to_unsigned(C_N_ADDR, C_MMAP_ADDR_WIDTH) ) ) then -- Check if this is a read from n
+					reg <= n_reg; --Delay a cycle
 						
-			elsif(rd_addr = std_logic_vector(to_unsigned(C_RESULT_ADDR, C_MMAP_ADDR_WIDTH) ) ) then --  Check if this is a read from result
-				reg <= result; --Delay a cycle
+				elsif(rd_addr = std_logic_vector(to_unsigned(C_RESULT_ADDR, C_MMAP_ADDR_WIDTH) ) ) then --  Check if this is a read from result
+					reg <= result; --Delay a cycle
 	
-			elsif(rd_addr = std_logic_vector(to_unsigned(C_DONE_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    --  Check if this is a read from done
-				reg <= std_logic_vector(to_unsigned(0, 32)); --Clear reg
-				reg(0) <= done; --Delay a cycle  (done is only 1 bit)
+				elsif(rd_addr = std_logic_vector(to_unsigned(C_DONE_ADDR, C_MMAP_ADDR_WIDTH) ) ) then    --  Check if this is a read from done
+					reg(0) <= done; --Delay a cycle  (done is only 1 bit)
 				
-			end if;
-					
+				end if;
+			end if;		
 		end if;
 	end process;
 	
