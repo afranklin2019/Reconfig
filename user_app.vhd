@@ -24,6 +24,7 @@ architecture CONNECT of user_app is
     signal n      : std_logic_vector(31 downto 0);
     signal result : std_logic_vector(31 downto 0);
     signal done   : std_logic;
+	
 begin
 
 	-- connect memory map and fib entity
