@@ -1,0 +1,85 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+use work.config_pkg.all;
+use work.user_pkg.all;
+
+entity controller is
+    port(
+         clk : in  std_logic;
+         rst : in  std_logic;
+         go  : in  std_logic;
+         done: out std_logic;
+         
+         -- Address generator signals
+         
+         addrGenIn_go     : out std_logic;
+         addrGenOut_go    : out std_logic;
+         addrGenIn_done   : in std_logic;
+         addrGenOut_done  : in std_logic;
+         
+         size_in          : in  std_logic_vector(C_MEM_ADDR_WIDTH downto 0);
+         size_out         : out std_logic_vector(C_MEM_ADDR_WIDTH downto 0));
+         
+end controller;
+
+architecture FSM of controller is
+
+    type STATE_TYPE is (S_WAIT_GO_ASSERT, S_START, S_WAIT_ADDR, S_DONE, S_WAIT_GO_UNASSERT);
+
+    signal state      : STATE_TYPE;
+    signal next_state : STATE_TYPE;
+begin
+
+    -- Implement state register
+    process(clk, rst)
+    begin
+        if(rst = '1') then
+            state <= S_WAIT_GO_ASSERT;
+        elsif(rising_edge(clk)) then
+            state <= next_state;
+        end if;
+    end process;
+    
+    process(state, go, addrGenIn_done, addrGenOut_done, size_in)
+    begin
+        -- Assignment of default values
+        done         <= '0';
+        addrGenIn_go <= '0';
+        addrGenOut_go<= '0';
+        size_out     <= (others => '0');
+
+        next_state <= state;
+        
+        case state is
+            -- Wait for go signal to be asserted
+            when S_WAIT_GO_ASSERT =>
+                if(go = '1') then
+                    next_state <= S_START;
+                end if;
+            -- Assert the go signals for the address generators
+            when S_START =>
+                addrGenIn_go <= '1';
+                addrGenOut_go<= '1';
+                size_out     <= size_in;            
+                next_state <= S_WAIT_ADDR;
+            -- Wait for address generators to finish
+            when S_WAIT_ADDR =>
+                if(addrGenIn_done = '1' AND addrGenOut_done = '1') then
+                    next_state <= S_DONE;
+                end if;
+            -- Assert the done signal
+            when S_DONE =>
+                done <= '1';
+                next_state <= S_WAIT_GO_UNASSERT;
+            -- Wait for go signal to be unasserted
+            when S_WAIT_GO_UNASSERT =>
+                if(go = '0') then
+                    next_state <= S_WAIT_GO_ASSERT;
+                end if;  
+           
+            when others => null;
+        end case;
+    end process;
+            
+end FSM;
