@@ -11,6 +11,7 @@ entity controller is
          go  : in  std_logic;
          done: out std_logic;
          
+         
          -- Address generator signals
          
          addrGenIn_go     : out std_logic;
@@ -18,8 +19,8 @@ entity controller is
          addrGenIn_done   : in std_logic;
          addrGenOut_done  : in std_logic;
          
-         size_in          : in  std_logic_vector(C_MEM_ADDR_WIDTH downto 0);
-         size_out         : out std_logic_vector(C_MEM_ADDR_WIDTH downto 0));
+         size_in          : in  std_logic_vector(C_MEM_ADDR_WIDTH-1 downto 0);
+         size_out         : out std_logic_vector(C_MEM_ADDR_WIDTH-1 downto 0));
          
 end controller;
 
@@ -29,6 +30,8 @@ architecture FSM of controller is
 
     signal state      : STATE_TYPE;
     signal next_state : STATE_TYPE;
+    
+    
 begin
 
     -- Implement state register
@@ -42,6 +45,9 @@ begin
     end process;
     
     process(state, go, addrGenIn_done, addrGenOut_done, size_in)
+    
+    variable done_check : std_logic := '0';
+    
     begin
         -- Assignment of default values
         done         <= '0';
@@ -56,6 +62,9 @@ begin
             when S_WAIT_GO_ASSERT =>
                 if(go = '1') then
                     next_state <= S_START;
+                    done_check := '0';
+                elsif(done_check = '1') then
+                    done <= '1';
                 end if;
             -- Assert the go signals for the address generators
             when S_START =>
@@ -75,11 +84,13 @@ begin
             -- Wait for go signal to be unasserted
             when S_WAIT_GO_UNASSERT =>
                 if(go = '0') then
+                    done <= '1';
+                    done_check := '1';
                     next_state <= S_WAIT_GO_ASSERT;
                 end if;  
            
             when others => null;
         end case;
     end process;
-            
+         
 end FSM;
