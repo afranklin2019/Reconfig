@@ -23,8 +23,8 @@ architecture TB of controller_tb is
     signal addrGenIn_done  : std_logic := '0';
     signal addrGenOut_done : std_logic := '0';
     
-    signal size_in         : std_logic_vector(C_MEM_ADDR_WIDTH-1 downto 0) := (others => '0');
-    signal size_out        : std_logic_vector(C_MEM_ADDR_WIDTH-1 downto 0) := (others => '0');
+    signal size_in         : std_logic_vector(C_MEM_ADDR_WIDTH downto 0) := (others => '0');
+    signal size_out        : std_logic_vector(C_MEM_ADDR_WIDTH downto 0) := (others => '0');
     
 begin
 
