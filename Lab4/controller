@@ -19,8 +19,8 @@ entity controller is
          addrGenIn_done   : in std_logic;
          addrGenOut_done  : in std_logic;
          
-         size_in          : in  std_logic_vector(C_MEM_ADDR_WIDTH-1 downto 0);
-         size_out         : out std_logic_vector(C_MEM_ADDR_WIDTH-1 downto 0));
+         size_in          : in  std_logic_vector(C_MEM_ADDR_WIDTH downto 0);
+         size_out         : out std_logic_vector(C_MEM_ADDR_WIDTH downto 0));
          
 end controller;
 
