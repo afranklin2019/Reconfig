@@ -40,6 +40,7 @@ architecture STR of dma_rd_ram_in is
     signal done_s       : std_logic;
     signal size_r       : std_logic_vector(RAM0_RD_SIZE_RANGE);
     signal start_addr_r : std_logic_vector(RAM0_ADDR_RANGE);
+    signal dram_data    : std_logic_vector(31 downto 0);
 
     component addr_gen
         port(
@@ -141,12 +142,16 @@ begin
                     ack       => open
                   );
     
+    dram_data <= dram_rd_data(15 downto 0) & dram_rd_data(31 downto 16);
+  
+    
+    
     U_FIFO     : dma_fifo
         port map (
                    rst        => clear,
                    wr_clk     => dram_clk,
                    rd_clk     => user_clk,
-                   din        => dram_rd_data,
+                   din        => dram_data,
                    wr_en      => dram_rd_valid,
                    rd_en      => rd_en,
                    dout       => data,
@@ -168,6 +173,7 @@ begin
     valid_s <= NOT empty;
     valid   <= valid_s;
     done    <= done_s;
+
                   
 end STR;                 
                   
