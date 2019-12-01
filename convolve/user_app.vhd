@@ -70,8 +70,6 @@ architecture default of user_app is
     signal sw_rst_s  : std_logic;
     signal rst_s     : std_logic;
     signal signal_size      : std_logic_vector(RAM0_RD_SIZE_RANGE);
---    signal ram0_rd_addr : std_logic_vector(RAM0_ADDR_RANGE);
---    signal ram1_wr_addr : std_logic_vector(RAM1_ADDR_RANGE);
     signal done      : std_logic;
 
 	
@@ -182,7 +180,7 @@ begin
 			output => kernel_output
 			);
 			
-	kernel_loaded <= not kernel_empty;		
+	kernel_loaded <= not kernel_empty;	--Define kernel_loaded as the opposite of empty	
 
 	ram0_rd_en <= ram0_rd_valid AND not sb_full; --Read from RAM 0 when read is valid and signal buffer is not full
 	ram0_rd_rd_en <= ram0_rd_en; --Connect internal signal to output
@@ -203,9 +201,9 @@ begin
 			output => signal_output
 			);
 	
-	U_DELAY : entity work.delay
+	U_DELAY : entity work.delay      --Delay for valid signal
 		generic map(
-			cycles => 8
+			cycles => clog2(C_KERNEL_SIZE+C_SIGNAL_SIZE)+1
 			)
 		port map (
 			clk    => clks(C_CLK_USER),
@@ -214,15 +212,15 @@ begin
 			input  => valid_in,
 			output => valid_out);
 
-	ram1_wr_en <= valid_out AND ram1_wr_ready;
+	ram1_wr_en <= valid_out AND ram1_wr_ready;  --Write to RAM1 when data is valid and RAM1 is ready
 	
-	valid_in <= sb_rd_en;
+	valid_in <= sb_rd_en;         --Data is valid whenever I read from signal buffer
 	
-	pipeline_en <= ram1_wr_ready;
+	pipeline_en <= ram1_wr_ready; --Stall pipeline when ram1_wr_ready is not ready
 			
 	U_PIPELINE : entity work.mult_add_tree
 		generic map (
-			num_inputs => 128 )
+			num_inputs => C_KERNEL_SIZE + C_SIGNAL_SIZE,
 			input1_width => C_KERNEL_WIDTH,
 			input2_width => C_SIGNAL_WIDTH )
 		port map (
@@ -242,7 +240,10 @@ begin
 			output => ram1_wr_data
 			);
 
-	ram0_rd_size  <= C_SIGNAL_SIZE + (2*(C_KERNEL_SIZE -1));
-	ram1_wr_size  <= size;
+	ram0_rd_size  <= C_SIGNAL_SIZE + (2*(C_KERNEL_SIZE -1));  --Ensure that I read from the signal as well as the padded zeroes
+	ram1_wr_size  <= C_SIGNAL_SIZE + C_KERNEL_SIZE - 1;                                    --Write to these many locations
+	
+	ram0_rd_addr  <= (others => '0'); --Starting address for both DMA entities is zero for convolution
+	ram1_wr_addr  <= (others => '0');
 			
 end default;
