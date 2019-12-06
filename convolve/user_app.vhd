@@ -101,6 +101,10 @@ architecture default of user_app is
 	signal pipeline_en : std_logic;
 	signal pipeline_output : std_logic_vector(C_KERNEL_WIDTH+C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)-1 downto 0);
 	
+	
+	signal signal_cast : unsigned(C_RAM0_RD_SIZE_WIDTH-1 downto 0);
+	signal output_cast : unsigned(C_RAM1_WR_SIZE_WIDTH-1 downto 0);
+	
 begin
 
     U_MMAP : entity work.memory_map
@@ -243,8 +247,11 @@ begin
 			output => ram1_wr_data
 			);
 
-	ram0_rd_size  <= std_logic_vector(to_unsigned( unsigned(signal_size) + 2*(C_KERNEL_SIZE - 1) , C_RAM0_RD_SIZE_WIDTH) ) ;  --Ensure that I read from the signal as well as the padded zeroes
-	ram1_wr_size  <= std_logic_vector(to_unsigned( unsigned(signal_size) + C_KERNEL_SIZE - 1, C_RAM1_WR_SIZE_WIDTH) );                                    --Write to these many locations
+	signal_cast   <= unsigned(signal_size) + 2*(C_KERNEL_SIZE - 1);		
+	ram0_rd_size  <= std_logic_vector(signal_cast) ;  --Ensure that I read from the signal as well as the padded zeroes
+	
+	output_cast   <= unsigned(signal_size) + C_KERNEL_SIZE - 1;
+	ram1_wr_size  <= std_logic_vector(output_cast);                                    --Write to these many locations
 	
 	ram0_rd_addr  <= (others => '0'); --Starting address for both DMA entities is zero for convolution
 	ram1_wr_addr  <= (others => '0');
