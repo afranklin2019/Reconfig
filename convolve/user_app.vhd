@@ -3,6 +3,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 use work.config_pkg.all;
 use work.user_pkg.all;
@@ -86,7 +87,7 @@ architecture default of user_app is
 	signal sb_rd_en : std_logic;
 	signal sb_full : std_logic;
 	signal sb_empty : std_logic;
-	signal signal_output : std_logic_vector(C_SIGNAL_SIZE * C_SIGNAL_WIDTH - 1 downto 0 );
+	signal signal_output : std_logic_vector(C_KERNEL_SIZE * C_SIGNAL_WIDTH - 1 downto 0 );
 	
 	--RAM 0 Signals
 	signal ram0_rd_en : std_logic;
@@ -98,7 +99,7 @@ architecture default of user_app is
 	signal valid_in : std_logic;
 	signal valid_out : std_logic;
 	signal pipeline_en : std_logic;
-	signal pipeline_output : std_logic_vector(C_KERNEL_WIDTH+C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE+ C_SIGNAL_SIZE)-1 downto 0);
+	signal pipeline_output : std_logic_vector(C_KERNEL_WIDTH+C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)-1 downto 0);
 	
 begin
 
@@ -203,14 +204,16 @@ begin
 	
 	U_DELAY : entity work.delay      --Delay for valid signal
 		generic map(
-			cycles => clog2(C_KERNEL_SIZE+C_SIGNAL_SIZE)+1
+			cycles => clog2(C_KERNEL_SIZE+C_KERNEL_SIZE)+1,
+			width => 1,
+			init => std_logic_vector(to_unsigned(0,1))
 			)
 		port map (
 			clk    => clks(C_CLK_USER),
 			rst    => rst_s,
 			en     => pipeline_en,
-			input  => valid_in,
-			output => valid_out);
+			input(0)  => valid_in,
+			output(0) => valid_out);
 
 	ram1_wr_en <= valid_out AND ram1_wr_ready;  --Write to RAM1 when data is valid and RAM1 is ready
 	
@@ -220,7 +223,7 @@ begin
 			
 	U_PIPELINE : entity work.mult_add_tree
 		generic map (
-			num_inputs => C_KERNEL_SIZE + C_SIGNAL_SIZE,
+			num_inputs => C_KERNEL_SIZE,
 			input1_width => C_KERNEL_WIDTH,
 			input2_width => C_SIGNAL_WIDTH )
 		port map (
@@ -233,15 +236,15 @@ begin
 			
 	U_CLIP : entity work.clip
 		generic map (
-			input_width => C_KERNEL_WIDTH+C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE+ C_SIGNAL_SIZE)
+			input_width => C_KERNEL_WIDTH+C_SIGNAL_WIDTH+clog2(C_KERNEL_SIZE)
 		)
 		port map(
 			input => pipeline_output,
 			output => ram1_wr_data
 			);
 
-	ram0_rd_size  <= C_SIGNAL_SIZE + (2*(C_KERNEL_SIZE -1));  --Ensure that I read from the signal as well as the padded zeroes
-	ram1_wr_size  <= C_SIGNAL_SIZE + C_KERNEL_SIZE - 1;                                    --Write to these many locations
+	ram0_rd_size  <= std_logic_vector(to_unsigned( unsigned(signal_size) + 2*(C_KERNEL_SIZE - 1) , C_RAM0_RD_SIZE_WIDTH) ) ;  --Ensure that I read from the signal as well as the padded zeroes
+	ram1_wr_size  <= std_logic_vector(to_unsigned( unsigned(signal_size) + C_KERNEL_SIZE - 1, C_RAM1_WR_SIZE_WIDTH) );                                    --Write to these many locations
 	
 	ram0_rd_addr  <= (others => '0'); --Starting address for both DMA entities is zero for convolution
 	ram1_wr_addr  <= (others => '0');
