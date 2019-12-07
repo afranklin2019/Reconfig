@@ -29,7 +29,7 @@ architecture behavior of wrapper_tb is
 	constant OUTPUT_SIZE  : integer := TEST_SIZE + UNPADDED_KERNEL_SIZE - 1; --Number of outputs to read from memory
 	
     constant DMA_SIZE   : integer := integer(ceil(real(TEST_SIZE+C_KERNEL_WIDTH)*real(C_RAM0_RD_DATA_WIDTH)/real(C_DRAM0_DATA_WIDTH)));
-    constant MAX_CYCLES : integer := TEST_SIZE*100;
+    constant MAX_CYCLES : integer := TEST_SIZE*1000;
 
     constant CLK0_HALF_PERIOD : time := 5 ns;
 
@@ -141,28 +141,36 @@ begin
             mmap_wr_addr <= std_logic_vector(to_unsigned(0, C_MMAP_ADDR_WIDTH));
             mmap_wr_en   <= '1';
             mmap_wr_data <= std_logic_vector(to_unsigned(0, C_MMAP_DATA_WIDTH/2) & to_unsigned(0, C_MMAP_DATA_WIDTH/2));        
-            wait until rising_edge(clk0);
-            clearMMAP;
+            for j in 0 to C_MMAP_CYCLES-1 loop
+                wait until rising_edge(clk0);
+                clearMMAP;
+            end loop;
 		
 		--Do Actual Signal
             mmap_wr_addr <= std_logic_vector(to_unsigned(1, C_MMAP_ADDR_WIDTH));
             mmap_wr_en   <= '1';
             mmap_wr_data <= std_logic_vector(to_unsigned(1, C_MMAP_DATA_WIDTH/2) & to_unsigned(1, C_MMAP_DATA_WIDTH/2));        
-            wait until rising_edge(clk0);
-            clearMMAP;
+            for j in 0 to C_MMAP_CYCLES-1 loop
+                wait until rising_edge(clk0);
+                clearMMAP;
+            end loop;
 		
 			mmap_wr_addr <= std_logic_vector(to_unsigned(2, C_MMAP_ADDR_WIDTH));
             mmap_wr_en   <= '1';
             mmap_wr_data <= std_logic_vector(to_unsigned(1, C_MMAP_DATA_WIDTH/2) & to_unsigned(1, C_MMAP_DATA_WIDTH/2));        
-            wait until rising_edge(clk0);
-            clearMMAP;
+           for j in 0 to C_MMAP_CYCLES-1 loop
+                wait until rising_edge(clk0);
+                clearMMAP;
+            end loop;
 		
 		--Finish Padding
 			mmap_wr_addr <= std_logic_vector(to_unsigned(3, C_MMAP_ADDR_WIDTH));
             mmap_wr_en   <= '1';
             mmap_wr_data <= std_logic_vector(to_unsigned(0, C_MMAP_DATA_WIDTH/2) & to_unsigned(0, C_MMAP_DATA_WIDTH/2));        
-            wait until rising_edge(clk0);
-			clearMMAP;
+            for j in 0 to C_MMAP_CYCLES-1 loop
+                wait until rising_edge(clk0);
+                clearMMAP;
+            end loop;
 			
 		--Write remaining zeros to fill out signal buffer
         for i in 4 to (128 + PADDED_SIGNAL_SIZE - 1)/2 loop
