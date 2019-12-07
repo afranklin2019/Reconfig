@@ -185,33 +185,36 @@ begin
         wait until rising_edge(clk0);
         clearMMAP;
 
-        for i in 0 to C_KERNEL_SIZE-1 loop
-            -- send kernel
-            mmap_wr_addr <= C_KERNEL_DATA_ADDR;
-            mmap_wr_en   <= '1';
-            mmap_wr_data <= std_logic_vector(to_unsigned(1, C_MMAP_DATA_WIDTH/2) & to_unsigned(1, C_MMAP_DATA_WIDTH/2));
-            wait until rising_edge(clk0);
-            clearMMAP;
-        end loop;
 		
 		--Send Kernel (All 1's)
-		for i in 0 to (UNPADDED_KERNEL_SIZE-1)/2 loop
+		for i in 0 to UNPADDED_KERNEL_SIZE-1 loop
             -- send kernel
             mmap_wr_addr <= C_KERNEL_DATA_ADDR;
             mmap_wr_en   <= '1';
-            mmap_wr_data <= std_logic_vector(to_unsigned(1, C_MMAP_DATA_WIDTH/2) & to_unsigned(1, C_MMAP_DATA_WIDTH/2));
-            wait until rising_edge(clk0);
-            clearMMAP;
+            mmap_wr_data <= std_logic_vector(to_unsigned(0, C_MMAP_DATA_WIDTH/2) & to_unsigned(1, C_MMAP_DATA_WIDTH/2));
+            
+			for j in 0 to C_MMAP_CYCLES-1 loop
+                wait until rising_edge(clk0);
+                clearMMAP;
+            end loop;
+			
         end loop;
 		
-		--Pad Kernel 
-		for i in (UNPADDED_KERNEL_SIZE-1)/2 to (C_KERNEL_SIZE/2) - 1  loop
+		
+		
+		
+		--Pad Kernel with zeros
+		for i in UNPADDED_KERNEL_SIZE to 127 loop
             -- send kernel
             mmap_wr_addr <= C_KERNEL_DATA_ADDR;
             mmap_wr_en   <= '1';
             mmap_wr_data <= std_logic_vector(to_unsigned(0, C_MMAP_DATA_WIDTH/2) & to_unsigned(0, C_MMAP_DATA_WIDTH/2));
-            wait until rising_edge(clk0);
-            clearMMAP;
+           
+		    for j in 0 to C_MMAP_CYCLES-1 loop
+                wait until rising_edge(clk0);
+                clearMMAP;
+            end loop;
+			
         end loop;
 		
 		--
