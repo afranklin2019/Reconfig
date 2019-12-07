@@ -79,6 +79,7 @@ architecture default of user_app is
 	signal kernel_load   : std_logic;
 	signal kernel_loaded : std_logic;
 	signal kernel_empty : std_logic;
+	signal kernel_intermediate : std_logic_vector(C_KERNEL_SIZE * C_KERNEL_WIDTH - 1 downto 0);
 	signal kernel_output : std_logic_vector(C_KERNEL_SIZE * C_KERNEL_WIDTH - 1 downto 0);
 	
 	
@@ -182,7 +183,7 @@ begin
 			full  => open,
 			empty => kernel_empty,
 			input => kernel_data,
-			output => kernel_output
+			output => kernel_intermediate
 			);
 			
 	kernel_loaded <= not kernel_empty;	--Define kernel_loaded as the opposite of empty	
@@ -208,7 +209,7 @@ begin
 	
 	U_DELAY : entity work.delay      --Delay for valid signal
 		generic map(
-			cycles => clog2(C_KERNEL_SIZE+C_KERNEL_SIZE)+1,
+			cycles => clog2(C_KERNEL_SIZE+C_KERNEL_SIZE),
 			width => 1,
 			init => std_logic_vector(to_unsigned(0,1))
 			)
@@ -220,11 +221,17 @@ begin
 			output(0) => valid_out);
 
 	ram1_wr_en <= valid_out AND ram1_wr_ready;  --Write to RAM1 when data is valid and RAM1 is ready
+	ram1_wr_valid <= ram1_wr_en;
 	
-	valid_in <= sb_rd_en;         --Data is valid whenever I read from signal buffer
+	valid_in <= sb_rd_en;         --Data is valid whenever read from signal buffer
 	
 	pipeline_en <= ram1_wr_ready; --Stall pipeline when ram1_wr_ready is not ready
-			
+	
+	--Switch Kernel to make first element last and last element first for convolution
+        U_SWITCH : for i in 0 to 127 generate
+			kernel_output( 2032 - (i * 16) + 15 downto  2032 - (i * 16)) <= kernel_intermediate( (i*16) + 15 downto (16*i) );
+		end generate U_VECTORIZE;
+	
 	U_PIPELINE : entity work.mult_add_tree
 		generic map (
 			num_inputs => C_KERNEL_SIZE,
